@@ -100,28 +100,34 @@ Gunakan flag `-e KEY=VALUE` saat menjalankan k6.
 
 Gunakan cara ini agar tidak perlu ribet install Python dan k6 manual.
 
-### 1. Build Image
-Pastikan Docker Desktop sudah menyala, lalu jalankan:
+### 1. Pull & Run (Recommended)
+Langsung download image resmi dari Docker Hub tanpa perlu build:
 ```bash
-docker build -t k6-dashboard .
-```
+# Download Image
+docker pull rfieq/k6-pro-dashboard:latest
 
-### 2. Jalankan Container
-Jalankan aplikasi di port 8501:
-```bash
-docker run -p 8501:8501 k6-dashboard
+# Jalankan Aplikasi
+docker run -p 8501:8501 rfieq/k6-pro-dashboard:latest
 ```
 Akses di browser: `http://localhost:8501`
 
-### 3. Simpan Hasil Test (Mount Volume)
-Agar file CSV history tidak hilang saat container direstart:
+### 2. Simpan Hasil Test (Mount Volume)
+Agar file CSV history tidak hilang saat container direstart, tambahkan flag `-v`:
+
 **Linux/Mac:**
 ```bash
-docker run -p 8501:8501 -v $(pwd)/results:/app/results k6-dashboard
+docker run -p 8501:8501 -v $(pwd)/results:/app/results rfieq/k6-pro-dashboard:latest
 ```
 **Windows (PowerShell):**
 ```powershell
-docker run -p 8501:8501 -v ${PWD}/results:/app/results k6-dashboard
+docker run -p 8501:8501 -v ${PWD}/results:/app/results rfieq/k6-pro-dashboard:latest
+```
+
+### 3. Build Manual (Dev Mode)
+Jika Anda ingin memodifikasi source code dan build sendiri:
+```bash
+docker build -t k6-dashboard .
+docker run -p 8501:8501 k6-dashboard
 ```
 
 ### 4. Upload ke Docker Hub (Opsional)
