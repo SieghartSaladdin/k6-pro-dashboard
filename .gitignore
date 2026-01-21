@@ -1,0 +1,19 @@
+# Python / Virtual Env
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables
+.env
+
+# Generated Results (Don't track test history)
+results/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db

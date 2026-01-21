@@ -1,0 +1,17 @@
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore Virtual Environment (We build fresh in Docker)
+venv/
+
+# Ignore Bytecode
+__pycache__/
+*.pyc
+
+# Ignore existing results (Use volume mapping instead)
+results/
+
+# Ignore Docker config files themselves
+Dockerfile
+.dockerignore

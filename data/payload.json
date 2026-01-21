@@ -1,0 +1,8 @@
+{
+    "username": "loadtester",
+    "email": "test@example.com",
+    "action": "login",
+    "metadata": {
+        "source": "k6"
+    }
+}
