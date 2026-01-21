@@ -123,26 +123,6 @@ docker run -p 8501:8501 -v $(pwd)/results:/app/results rfieq/k6-pro-dashboard:la
 docker run -p 8501:8501 -v ${PWD}/results:/app/results rfieq/k6-pro-dashboard:latest
 ```
 
-### 3. Build Manual (Dev Mode)
-Jika Anda ingin memodifikasi source code dan build sendiri:
-```bash
-docker build -t k6-dashboard .
-docker run -p 8501:8501 k6-dashboard
-```
-
-### 4. Upload ke Docker Hub (Opsional)
-Jika Anda ingin menyimpan image ini secara online:
-```bash
-# Login dulu
-docker login
-
-# Tag & Push
-docker tag k6-dashboard usernameanda/k6-dashboard:latest
-docker push usernameanda/k6-dashboard:latest
-```
-
----
-
 ## 🐙 Setup Menggunakan Docker Compose (Paling Mudah)
 
 Cukup satu perintah untuk build & run sekaligus mount folder history secara otomatis.
