@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { getScenarios, getThresholds } from './src/config.js';
+import { getScenarios, getThresholds } from './config.js';
 
 // -------------------------------------------------------------------------
 // INIT CONTEXT: Setup Options (Scenarios & Thresholds)
@@ -92,7 +92,7 @@ export default function () {
             res = http.get(BASE_URL, requestConfig);
         }
     } catch (e) {
-        console.error(`Request Exception: ${e}`);
+        // console.error(`Request Exception: ${e}`); // Disable logging biar terminal tidak merah
         return; // Skip check jika request crash
     }
 
