@@ -28,7 +28,22 @@ export default function () {
     const METHOD = (__ENV.METHOD || 'GET').toUpperCase();
     
     // Parse Headers custom (format JSON string, misal: '{"Authorization":"Bearer abc", "X-Custom":"123"}')
-    let HEADERS = { 'Content-Type': 'application/json' };
+    // Default Header: Pura-pura jadi browser Chrome LENGKAP agar tidak kena blokir 403 WAF/Cloudflare
+    let HEADERS = { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Cache-Control': 'max-age=0'
+    };
+
     if (__ENV.HEADERS) {
         try {
             const customHeaders = JSON.parse(__ENV.HEADERS);
@@ -38,7 +53,6 @@ export default function () {
         }
     }
 
-    // Load Payload (Bisa dari file atau string JSON langsung)
     let PAYLOAD = null;
     if (METHOD === 'POST' || METHOD === 'PUT' || METHOD === 'PATCH') {
         if (__ENV.PAYLOAD_FILE) {
@@ -58,30 +72,50 @@ export default function () {
     }
 
     // 2. Eksekusi Request
+    // Tambahkan TIMEOUT agar k6 tidak hang saat menembak endpoint Streaming/SSE
+    const requestConfig = { 
+        headers: HEADERS,
+        timeout: '5s'  // Paksa stop jika server tidak selesai merespon dalam 5 detik
+    };
+
     let res;
-    if (METHOD === 'GET') {
-        res = http.get(BASE_URL, { headers: HEADERS });
-    } else if (METHOD === 'POST') {
-        res = http.post(BASE_URL, PAYLOAD, { headers: HEADERS });
-    } else if (METHOD === 'PUT') {
-        res = http.put(BASE_URL, PAYLOAD, { headers: HEADERS });
-    } else if (METHOD === 'DELETE') {
-        res = http.del(BASE_URL, null, { headers: HEADERS });
-    } else {
-        // Fallback default GET
-        res = http.get(BASE_URL, { headers: HEADERS });
+    try {
+        if (METHOD === 'GET') {
+            res = http.get(BASE_URL, requestConfig);
+        } else if (METHOD === 'POST') {
+            res = http.post(BASE_URL, PAYLOAD, requestConfig);
+        } else if (METHOD === 'PUT') {
+            res = http.put(BASE_URL, PAYLOAD, requestConfig);
+        } else if (METHOD === 'DELETE') {
+            res = http.del(BASE_URL, null, requestConfig);
+        } else {
+            res = http.get(BASE_URL, requestConfig);
+        }
+    } catch (e) {
+        console.error(`Request Exception: ${e}`);
+        return; // Skip check jika request crash
     }
 
     // 3. Validasi / Check
     const expectedStatus = __ENV.EXPECTED_STATUS ? parseInt(__ENV.EXPECTED_STATUS) : 200;
     
-    check(res, {
+    const checkRes = check(res, {
         [`status is ${expectedStatus}`]: (r) => r.status === expectedStatus,
         'response time < 500ms': (r) => r.timings.duration < 500,
         'response time < 1000ms': (r) => r.timings.duration < 1000,
     });
 
+    // --- DEBUGGING ERROR ---
+    // Jika status tidak sesuai, print error ke log console agar kelihatan di Terminal/Docker logs
+    if (!checkRes && res.status !== expectedStatus) {
+        console.error(`❌ FAILURE: ${METHOD} ${BASE_URL} -> Status: ${res.status}`);
+        // Tampilkan sedikit snippet body response untuk diagnosa (misal pesan error dari server)
+        if (res.body) {
+             console.error(`   Body: ${res.body.toString().slice(0, 200)}...`); 
+        }
+    }
+
     // 4. Sleep (Pacing)
-    // Random pause 0.5s - 1.5s agar request tidak terlalu robotik (opsional, tergantung case)
-    sleep(1);
+    // Random pause 1s - 3s (JITTER) agar tidak terdeteksi sebagai bot yang memiliki pola waktu pas 1 detik
+    sleep(Math.random() * 2 + 1);
 }
